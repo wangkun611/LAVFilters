@@ -173,6 +173,8 @@ private:
   BOOL m_bMP4;
   BOOL m_bTSDiscont;
   BOOL m_bVC1Correction;
+  BOOL m_bSubtitleAll;
+  std::set<long>  m_subtitleStreamIndex;
 
   BOOL m_bSubStreams;
 

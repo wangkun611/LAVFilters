@@ -29,7 +29,8 @@ typedef enum LAVSubtitleMode {
   LAVSubtitleMode_NoSubs,
   LAVSubtitleMode_ForcedOnly,
   LAVSubtitleMode_Default,
-  LAVSubtitleMode_Advanced
+  LAVSubtitleMode_Advanced,
+  LAVSubtitleMode_All
 } LAVSubtitleMode;
 
 [uuid("774A919D-EA95-4A87-8A1E-F48ABE8499C7")]

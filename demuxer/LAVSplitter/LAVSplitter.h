@@ -39,7 +39,7 @@
 
 #include "LAVSplitterTrayIcon.h"
 
-#define LAVF_REGISTRY_KEY L"Software\\LAV\\Splitter"
+#define LAVF_REGISTRY_KEY L"Software\\PPTV\\LAV\\Splitter"
 #define LAVF_REGISTRY_KEY_FORMATS LAVF_REGISTRY_KEY L"\\Formats"
 #define LAVF_LOG_FILE     L"LAVSplitter.txt"
 

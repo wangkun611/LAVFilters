@@ -44,6 +44,7 @@ extern "C" {
 }
 #pragma warning(pop)
 
+#include <tchar.h>
 #include "streams.h"
 
 #include "DShowUtil.h"
