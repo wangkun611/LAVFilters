@@ -31,6 +31,8 @@
 #include <InitGuid.h>
 
 #include <qnetwork.h>
+#include <Shlwapi.h>
+#include <ShlObj.h>
 #include "LAVSplitter.h"
 #include "moreuuids.h"
 
@@ -155,6 +157,14 @@ STDAPI DllUnregisterServer()
   return AMovieDllRegisterServer2(false);
 }
 
+static const char* ffmpeg_dll [] = {
+    "avformat-lav-55.dll", (const char*)L"avformat-lav-55.dll",
+    "avutil-lav-52.dll", (const char*)L"avutil-lav-52.dll",
+    "avcodec-lav-55.dll", (const char*)L"avcodec-lav-55.dll",
+    "libbluray.dll", (const char*)L"libbluray.dll",
+};
+BOOL GetCodecPath(TCHAR* aPath);
+
 // if we declare the correct C runtime entrypoint and then forward it to the DShow base
 // classes we will be sure that both the C/C++ runtimes and the base classes are initialized
 // correctly
@@ -163,6 +173,20 @@ extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 BOOL WINAPI DllMain(HANDLE hDllHandle, DWORD dwReason, LPVOID lpReserved)
 {
   g_currentModule = (HMODULE)hDllHandle;
+  // ¼ì²éffmpeg dll
+  TCHAR szCodecPath[_MAX_PATH];
+  if (!GetCodecPath(szCodecPath)) {
+      return FALSE;
+  }
+  for (int i = 0; i < _countof(ffmpeg_dll); i+=2) {
+      TCHAR szPath[_MAX_PATH] = {0};
+      ::PathAppend(szPath, szCodecPath);
+      ::PathAppend(szPath, (LPCWSTR)ffmpeg_dll[i+1]);
+      if (!PathFileExists(szPath)) {
+          return FALSE;
+      }
+  }
+
   return DllEntryPoint(reinterpret_cast<HINSTANCE>(hDllHandle), dwReason, lpReserved);
 }
 
@@ -182,8 +206,6 @@ STDAPI OpenConfiguration()
 }
 
 #include <delayimp.h>
-#include <Shlwapi.h>
-#include <ShlObj.h>
 #include <string>
 #include <atlbase.h>
 #include <atlapp.h>
@@ -367,13 +389,7 @@ FARPROC WINAPI fnDliHook(
     PDelayLoadInfo  pdli
     )
 {
-    static const char* ffmpeg_dll [] = {
-        "avformat-lav-55.dll", (const char*)L"avformat-lav-55.dll",
-        "avutil-lav-52.dll", (const char*)L"avformat-lav-55.dll",
-        "avcodec-lav-55.dll", (const char*)L"avformat-lav-55.dll",
-        "libbluray.dll", (const char*)L"avformat-lav-55.dll",
-    };
-    if (dliNotify == dliFailLoadLib) {
+    if (dliNotify == dliNotePreLoadLibrary) {
         for (int i = 0; i < _countof(ffmpeg_dll); i += 2) {
             if (_stricmp(pdli->szDll, ffmpeg_dll[i]) == 0) {
                 // dll Ä¿Â¼
