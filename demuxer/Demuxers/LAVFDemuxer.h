@@ -174,6 +174,8 @@ private:
   BOOL m_bRM                         = FALSE;
   BOOL m_bPMP                        = FALSE;
   BOOL m_bMP4                        = FALSE;
+  BOOL m_bSubtitleAll;
+  std::set<long>  m_subtitleStreamIndex;
 
   BOOL m_bTSDiscont                  = FALSE;
   BOOL m_bSubStreams                 = FALSE;

@@ -144,7 +144,7 @@ STDMETHODIMP CLAVSplitter::LoadDefaults()
   m_settings.prefSubLangs     = L"";
   m_settings.subtitleAdvanced = L"";
 
-  m_settings.subtitleMode     = LAVSubtitleMode_Default;
+  m_settings.subtitleMode     = LAVSubtitleMode_All;
   m_settings.PGSForcedStream  = TRUE;
   m_settings.PGSOnlyForced    = FALSE;
 
@@ -610,19 +610,39 @@ STDMETHODIMP CLAVSplitter::InitDemuxer()
     }
   }
 
-  std::string audioLanguage = audioStream ? audioStream->language : std::string();
+  if (GetSubtitleMode() == LAVSubtitleMode_All) {
+      CBaseDemuxer::CStreamList *streams = m_pDemuxer->GetStreams(CBaseDemuxer::subpic);
+      std::deque<CBaseDemuxer::stream>::iterator sit;
+      for (sit = streams->begin(); sit != streams->end(); sit++) {
+          if (sit->pid == NO_SUBTITLE_PID) {
+              continue;
+          }
 
-  std::list<CSubtitleSelector> subtitleSelectors = GetSubtitleSelectors();
-  const CBaseDemuxer::stream *subtitleStream = m_pDemuxer->SelectSubtitleStream(subtitleSelectors, audioLanguage);
-  if (subtitleStream && !bNoSubtitles) {
-    CLAVOutputPin* pPin = new CLAVOutputPin(subtitleStream->streamInfo->mtypes, CBaseDemuxer::CStreamList::ToStringW(CBaseDemuxer::subpic), this, this, &hr, CBaseDemuxer::subpic, m_pDemuxer->GetContainerFormat(), m_pPins.empty());
-    if(SUCCEEDED(hr)) {
-      pPin->SetStreamId(subtitleStream->pid);
-      m_pPins.push_back(pPin);
-      m_pDemuxer->SetActiveStream(CBaseDemuxer::subpic, subtitleStream->pid);
-    } else {
-      delete pPin;
-    }
+          const CBaseDemuxer::stream *subtitleStream = &*sit;
+          CLAVOutputPin* pPin = new CLAVOutputPin(subtitleStream->streamInfo->mtypes, CBaseDemuxer::CStreamList::ToStringW(CBaseDemuxer::subpic), this, this, &hr, CBaseDemuxer::subpic, m_pDemuxer->GetContainerFormat());
+          if(SUCCEEDED(hr)) {
+              pPin->SetStreamId(subtitleStream->pid);
+              m_pPins.push_back(pPin);
+              m_pDemuxer->SetActiveStream(CBaseDemuxer::subpic, subtitleStream->pid);
+          } else {
+              delete pPin;
+          }
+      }
+  } else {
+      std::string audioLanguage = audioStream ? audioStream->language : std::string();
+
+      std::list<CSubtitleSelector> subtitleSelectors = GetSubtitleSelectors();
+      const CBaseDemuxer::stream *subtitleStream = m_pDemuxer->SelectSubtitleStream(subtitleSelectors, audioLanguage);
+      if (subtitleStream && !bNoSubtitles) {
+          CLAVOutputPin* pPin = new CLAVOutputPin(subtitleStream->streamInfo->mtypes, CBaseDemuxer::CStreamList::ToStringW(CBaseDemuxer::subpic), this, this, &hr, CBaseDemuxer::subpic, m_pDemuxer->GetContainerFormat());
+          if(SUCCEEDED(hr)) {
+              pPin->SetStreamId(subtitleStream->pid);
+              m_pPins.push_back(pPin);
+              m_pDemuxer->SetActiveStream(CBaseDemuxer::subpic, subtitleStream->pid);
+          } else {
+              delete pPin;
+          }
+      }
   }
 
   if(SUCCEEDED(hr)) {

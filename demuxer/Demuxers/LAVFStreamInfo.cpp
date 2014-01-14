@@ -58,6 +58,8 @@ CLAVFStreamInfo::~CLAVFStreamInfo()
 
 STDMETHODIMP CLAVFStreamInfo::CreateAudioMediaType(AVFormatContext *avctx, AVStream *avstream)
 {
+  static const struct AVCodecTag * const mp_wav_taglists[] = { avformat_get_riff_audio_tags(), mp_wav_tags, 0};
+
   // Make sure DTS Express has valid settings
   if (avstream->codec->codec_id == AV_CODEC_ID_DTS && avstream->codec->codec_tag == 0xA2) {
     avstream->codec->channels = avstream->codec->channels ? avstream->codec->channels : 2;
@@ -203,6 +205,8 @@ static bool hevc_is_annexb(std::string format, AVStream *avstream)
 
 STDMETHODIMP CLAVFStreamInfo::CreateVideoMediaType(AVFormatContext *avctx, AVStream *avstream)
 {
+  static const struct AVCodecTag * const mp_bmp_taglists[] = { avformat_get_riff_video_tags(), mp_bmp_tags, 0};
+
   unsigned int origCodecTag = avstream->codec->codec_tag;
   if (avstream->codec->codec_tag == 0 && avstream->codec->codec_id != AV_CODEC_ID_DVVIDEO) {
     avstream->codec->codec_tag = av_codec_get_tag(mp_bmp_taglists, avstream->codec->codec_id);

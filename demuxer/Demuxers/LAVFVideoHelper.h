@@ -54,7 +54,6 @@ const AVCodecTag mp_bmp_tags[] = {
   { AV_CODEC_ID_XAN_WC3,           MKTAG('W', 'C', '3', 'V')},
   { AV_CODEC_ID_NONE,              0}
 };
-const struct AVCodecTag * const mp_bmp_taglists[] = { avformat_get_riff_video_tags(), mp_bmp_tags, 0};
 
 class CLAVFVideoHelper
 {

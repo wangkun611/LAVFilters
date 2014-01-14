@@ -88,7 +88,7 @@ CLAVFDemuxer::CLAVFDemuxer(CCritSec *pLock, ILAVFSettingsInternal *settings)
   : CBaseDemuxer(L"lavf demuxer", pLock)
 {
   m_bSubStreams = settings->GetSubstreamsEnabled();
-
+  m_bSubtitleAll = (settings->GetSubtitleMode() == LAVSubtitleMode_All);
   m_pSettings = settings;
 
   WCHAR fileName[1024];
@@ -573,7 +573,11 @@ HRESULT CLAVFDemuxer::SetActiveStream(StreamType type, int pid)
         }
       }
     } else if (st->codec->codec_type == AVMEDIA_TYPE_SUBTITLE) {
-      st->discard = (m_dActiveStreams[subpic] == idx || (m_dActiveStreams[subpic] == FORCED_SUBTITLE_PID && m_ForcedSubStream == idx)) ? AVDISCARD_DEFAULT : AVDISCARD_ALL;
+      if (m_pSettings->GetSubtitleMode() == LAVSubtitleMode_All) {
+        st->discard = AVDISCARD_DEFAULT;
+      } else {
+        st->discard = (m_dActiveStreams[subpic] == idx || (m_dActiveStreams[subpic] == FORCED_SUBTITLE_PID && m_ForcedSubStream == idx)) ? AVDISCARD_DEFAULT : AVDISCARD_ALL;
+      }
     } else {
       st->discard = AVDISCARD_ALL;
     }
@@ -685,6 +689,8 @@ void CLAVFDemuxer::SettingsChanged(ILAVFSettingsInternal *pSettings)
       st->need_parsing = m_stOrigParser[idx];
     }
   }
+
+  m_bSubtitleAll = (pSettings->GetSubtitleMode() == LAVSubtitleMode_All);
 
   m_bPGSNoParsing = !pSettings->GetPGSOnlyForced();
 }
@@ -916,6 +922,11 @@ STDMETHODIMP CLAVFDemuxer::GetNextPacket(Packet **ppPacket)
     // Accept it if its the forced subpic stream
     if (m_dActiveStreams[subpic] == FORCED_SUBTITLE_PID && pkt.stream_index == m_ForcedSubStream) {
       forcedSubStream = streamActive = TRUE;
+    }
+    if (!streamActive || m_bSubtitleAll) {
+      if (m_subtitleStreamIndex.find(pkt.stream_index) != m_subtitleStreamIndex.end()) {
+        streamActive = TRUE;
+      }
     }
 
     if(!streamActive) {
@@ -1513,7 +1524,10 @@ STDMETHODIMP CLAVFDemuxer::AddStream(int streamId)
     m_streams[audio].push_back(s);
     break;
   case AVMEDIA_TYPE_SUBTITLE:
-    m_streams[subpic].push_back(s);
+    {
+      m_streams[subpic].push_back(s);
+      m_subtitleStreamIndex.insert(streamId);
+    }
     break;
   default:
     // unsupported stream

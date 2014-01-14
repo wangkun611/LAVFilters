@@ -61,8 +61,6 @@ const AVCodecTag mp_wav_tags[] = {
   { AV_CODEC_ID_NONE,              0}
 };
 
-const struct AVCodecTag * const mp_wav_taglists[] = { avformat_get_riff_audio_tags(), mp_wav_tags, 0};
-
 class CLAVFAudioHelper
 {
 public:
