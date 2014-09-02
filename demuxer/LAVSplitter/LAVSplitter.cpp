@@ -145,7 +145,7 @@ STDMETHODIMP CLAVSplitter::LoadDefaults()
   m_settings.subtitleAdvanced = L"";
 
   m_settings.subtitleMode     = LAVSubtitleMode_All;
-  m_settings.PGSForcedStream  = TRUE;
+  m_settings.PGSForcedStream  = FALSE;
   m_settings.PGSOnlyForced    = FALSE;
 
   m_settings.vc1Mode          = 2;
@@ -623,7 +623,9 @@ STDMETHODIMP CLAVSplitter::InitDemuxer()
           if(SUCCEEDED(hr)) {
               pPin->SetStreamId(subtitleStream->pid);
               m_pPins.push_back(pPin);
-              m_pDemuxer->SetActiveStream(CBaseDemuxer::subpic, subtitleStream->pid);
+			  if (subtitleStream->pid != FORCED_SUBTITLE_PID) {
+				  m_pDemuxer->SetActiveStream(CBaseDemuxer::subpic, subtitleStream->pid);
+			  }
           } else {
               delete pPin;
           }
